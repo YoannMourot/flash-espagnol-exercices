@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reflejo Temporal: Indefinido vs Perfecto</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #1a1a2e; color: #fff; margin: 0; }
+        .card { background: #16213e; padding: 2.5rem; border-radius: 15px; width: 550px; text-align: center; border: 1px solid #0f3460; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #e94560; margin-top: 0; font-size: 1.8rem; }
+        .instruction { color: #808dad; margin-bottom: 20px; font-style: italic; }
+        .sentence-display { font-size: 1.3rem; font-weight: bold; margin: 25px 0; color: #4ecca3; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+        input { width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 8px; border: 2px solid transparent; background: #0f3460; color: #fff; box-sizing: border-box; outline: none; transition: 0.3s; }
+        input:focus { border-color: #e94560; }
+        .feedback { margin-top: 20px; min-height: 70px; font-size: 1rem; line-height: 1.4; }
+        .stats { margin-top: 20px; font-size: 0.9rem; color: #808dad; border-top: 1px solid #0f3460; padding-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Reflejo Temporal</h1>
+    <div class="instruction">Traduis en espagnol (les accents et la ponctuation sont ignorés)</div>
+    <div class="sentence-display" id="sentence-fr">Chargement...</div>
+    <input type="text" id="answer" placeholder="Ta traduction ici..." autocomplete="off">
+    <div class="feedback" id="feedback"></div>
+    <div class="stats">Score : <span id="score" style="color: #f1c40f; font-weight: bold;">0</span></div>
+</div>
+
+<script>
+    // Base de données variée (Verbes réguliers et irréguliers au passé)
+    const database = [
+        // --- Verbe IR (Aller) ---
+        { fr: "Hier, je suis allé à la plage.", es: "Ayer fui a la playa." },
+        { fr: "Aujourd'hui, je suis allé au travail.", es: "Hoy he ido al trabajo." },
+        { fr: "L'année dernière, nous sommes allés en Espagne.", es: "El año pasado fuimos a España." },
+        { fr: "Cette semaine, elle est allée au cinéma.", es: "Esta semana ha ido al cine." },
+        
+        // --- Verbe COMER (Manger) ---
+        { fr: "Aujourd'hui, j'ai mangé une pomme.", es: "Hoy he comido una manzana." },
+        { fr: "Hier soir, nous avons mangé au restaurant.", es: "Anoche comimos en el restaurante." },
+        { fr: "Ce midi, ils ont mangé une pizza.", es: "Este mediodía han comido una pizza." },
+        
+        // --- Verbe TRABAJAR (Travailler) ---
+        { fr: "L'année dernière, nous avons travaillé à Madrid.", es: "El año pasado trabajamos en Madrid." },
+        { fr: "Cette semaine, tu as beaucoup travaillé.", es: "Esta semana has trabajado mucho." },
+        
+        // --- Verbe CANTAR / BAILAR / ESCUCHAR (Musique/Fête) ---
+        { fr: "Cette semaine, elle a chanté une chanson.", es: "Esta semana ha cantado una canción." },
+        { fr: "Samedi dernier, vous avez dansé.", es: "El sábado pasado bailasteis." },
+        { fr: "Hier, j'ai écouté de la musique.", es: "Ayer escuché música." },
+        
+        // --- Verbe HABLAR (Parler) ---
+        { fr: "Ce matin, j'ai parlé avec lui.", es: "Esta mañana he hablado con él." },
+        { fr: "Hier, ils ont parlé avec le directeur.", es: "Ayer hablaron con el director." },
+        
+        // --- Verbe COMPRAR / VENDER (Commerce) ---
+        { fr: "Il y a deux jours, tu as acheté du pain.", es: "Hace dos días compraste pan." },
+        { fr: "En 2020, ils ont acheté une voiture.", es: "En 2020 compraron un coche." },
+        { fr: "Il y a trois ans, j'ai vendu ma maison.", es: "Hace tres años vendí mi casa." },
+        
+        // --- Verbe VISITAR / VIAJAR (Voyage) ---
+        { fr: "Ce mois-ci, nous avons visité le musée.", es: "Este mes hemos visitado el museo." },
+        { fr: "Cette année, ils ont voyagé au Mexique.", es: "Este año han viajado a México." },
+        
+        // --- Verbe VER / MIRAR / LEER (Médias/Lecture) ---
+        { fr: "En 2010, j'ai vu ce film.", es: "En 2010 vi esta película." },
+        { fr: "Aujourd'hui, j'ai regardé les nouvelles.", es: "Hoy he mirado las noticias." },
+        { fr: "Le mois dernier, il a lu un livre intéressant.", es: "El mes pasado leyó un libro interesante." },
+        
+        // --- Verbe HACER / ESCRIBIR / TERMINAR (Actions/Devoirs) ---
+        { fr: "Récemment, j'ai fini mon livre.", es: "Recientemente he terminado mi libro." },
+        { fr: "Cette semaine, j'ai fait mes devoirs.", es: "Esta semana he hecho mis deberes." },
+        { fr: "Hier, tu as écrit une lettre.", es: "Ayer escribiste una carta." },
+        
+        // --- Divers ---
+        { fr: "Ce matin, nous avons bu un café.", es: "Esta mañana hemos bebido un café." },
+        { fr: "La semaine dernière, elle a perdu ses clés.", es: "La semana pasada perdió sus llaves." },
+        { fr: "Dimanche dernier, ils ont dormi jusqu'à midi.", es: "El domingo pasado durmieron hasta las doce." }
+    ];
+
+    let currentTask;
+    let score = 0;
+    const inputElement = document.getElementById('answer');
+    const feedbackElement = document.getElementById('feedback');
+    const scoreElement = document.getElementById('score');
+    
+    // Nettoyage ultra-complet (Accents, virgules, points, doubles espaces...)
+    function normalize(str) {
+        return str.toLowerCase()
+                  .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Supprime les accents
+                  .replace(/[.,;!?¿¡'’\-]/g, " ") // Remplace la ponctuation par des espaces
+                  .replace(/\s+/g, " ") // Fusionne les espaces multiples
+                  .trim();
+    }
+
+    function nextQuestion() {
+        currentTask = database[Math.floor(Math.random() * database.length)];
+        document.getElementById('sentence-fr').innerText = currentTask.fr;
+        inputElement.value = "";
+        feedbackElement.innerHTML = "";
+        inputElement.focus();
+    }
+
+    inputElement.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const userAnswer = normalize(inputElement.value);
+            const correctAnswer = normalize(currentTask.es);
+
+            if (userAnswer === correctAnswer) {
+                feedbackElement.innerHTML = `<span style="color:#55efc4; font-weight:bold;">¡Excelente!</span><br><small style="color:#808dad;">${currentTask.es}</small>`;
+                score++;
+                scoreElement.innerText = score;
+                setTimeout(nextQuestion, 1500);
+            } else {
+                feedbackElement.innerHTML = `
+                    <span style="color:#ff7675; font-weight:bold;">Correction :</span><br>
+                    <b style="color:#fff;">${currentTask.es}</b>
+                `;
+            }
+        }
+    });
+
+    nextQuestion();
+</script>
+</body>
+</html>

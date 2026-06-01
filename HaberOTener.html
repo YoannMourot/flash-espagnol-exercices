@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Haber vs Tener: Master Challenge</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #2c3e50; margin: 0; color: #fff; }
+        .card { background: #34495e; padding: 2.5rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; width: 500px; }
+        h1 { color: #f1c40f; margin-bottom: 10px; }
+        .cheat-sheet { font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
+        .sentence { font-size: 1.3rem; margin: 30px 0; min-height: 50px; }
+        input { width: 80%; padding: 12px; font-size: 1.2rem; border: none; border-radius: 5px; text-align: center; outline: none; }
+        .feedback { margin-top: 20px; min-height: 40px; font-weight: bold; }
+        .stats { margin-top: 20px; font-size: 0.9rem; opacity: 0.7; }
+        .correct { color: #2ecc71; }
+        .wrong { color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Haber vs Tener</h1>
+    <div class="cheat-sheet">
+        <div><strong>Haber:</strong> he, has, ha, hemos, habéis, han + Participe / Hay (il y a)</div>
+        <div><strong>Tener:</strong> tengo, tienes, tiene, tenemos, tenéis, tienen + Nom / Sensation</div>
+    </div>
+
+    <div class="sentence" id="sentence">Cargando...</div>
+    <input type="text" id="answer" placeholder="Escribe la respuesta..." autocomplete="off">
+    
+    <div class="feedback" id="feedback"></div>
+    <div class="stats">Pregunta: <span id="current">1</span> / <span id="total">0</span> | Score: <span id="score">0</span></div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "Vosotros ________ mucha suerte.", a: "tenéis", note: "Possession (la chance)." },
+        { q: "Ellos no ________ estudiado nada.", a: "han", note: "Auxiliaire + participe passé." },
+        { q: "En la nevera ________ cuatro manzanas.", a: "hay", note: "Existence (il y a)." },
+        { q: "Nosotros ________ que salir ahora.", a: "tenemos", note: "Tener que + infinitif = obligation." },
+        { q: "Para aprobar, ________ que estudiar mucho.", a: "hay", note: "Hay que + infinitif = 'Il faut' (général)." },
+        { q: "¿Tú ________ visto mis llaves?", a: "has", note: "Auxiliaire (As-tu vu...)." },
+        { q: "Vosotros ________ mucha hambre.", a: "tenéis", note: "Sensation physique." },
+        { q: "Ustedes ________ una casa preciosa.", a: "tienen", note: "Possession (pluriel de politesse)." },
+        { q: "Yo nunca ________ estado en Madrid.", a: "he", note: "Auxiliaire (Je n'ai jamais été...)." },
+        { q: "¿Cuántos hermanos ________ ella?", a: "tiene", note: "Famille/Possession." },
+        { q: "Hoy ________ un sol muy fuerte.", a: "hace", a_alt: "hay", note: "Existence d'un phénomène." },
+        { q: "Usted ________ que firmar aquí.", a: "tiene", note: "Obligation personnelle (Usted)." },
+        { q: "Mis padres ________ comprado un coche.", a: "han", note: "Auxiliaire (Passé composé)." },
+        { q: "En mi barrio no ________ tiendas.", a: "hay", note: "Existence (négation)." }
+    ];
+
+    let current = 0;
+    let score = 0;
+    const sentenceEl = document.getElementById('sentence');
+    const inputEl = document.getElementById('answer');
+    const feedbackEl = document.getElementById('feedback');
+    const scoreEl = document.getElementById('score');
+    const currentEl = document.getElementById('current');
+    const totalEl = document.getElementById('total');
+
+    totalEl.innerText = quizData.length;
+
+    function displayQuestion() {
+        sentenceEl.innerText = quizData[current].q.replace("________", "____");
+        inputEl.value = "";
+        feedbackEl.innerHTML = "";
+        currentEl.innerText = current + 1;
+    }
+
+    function checkAnswer() {
+        const user = inputEl.value.trim().toLowerCase();
+        const correct = quizData[current].a.toLowerCase();
+        
+        if (user === correct) {
+            feedbackEl.innerHTML = `<span class="correct">¡Excelente!</span>`;
+            score++;
+            scoreEl.innerText = score;
+            setTimeout(next, 1000);
+        } else {
+            feedbackEl.innerHTML = `<span class="wrong">Mal... La respuesta es <b>${correct}</b><br><small>${quizData[current].note}</small></span>`;
+        }
+    }
+
+    function next() {
+        current++;
+        if (current < quizData.length) {
+            displayQuestion();
+        } else {
+            sentenceEl.innerText = "¡Terminado!";
+            inputEl.style.display = "none";
+            feedbackEl.innerHTML = `Puntuación final: ${score} / ${quizData.length}`;
+        }
+    }
+
+    inputEl.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkAnswer();
+    });
+
+    displayQuestion();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Spanish Time</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 400px; }
+        h1 { color: #2c3e50; }
+        .time-display { font-size: 3rem; font-weight: bold; margin: 20px 0; color: #3498db; }
+        input { width: 100%; padding: 12px; font-size: 1.1rem; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; transition: border-color 0.3s; }
+        input:focus { border-color: #3498db; }
+        .feedback { margin-top: 15px; min-height: 50px; font-weight: 500; }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+        .timer { font-size: 1.2rem; color: #7f8c8d; margin-bottom: 10px; }
+        .stats { margin-top: 20px; font-size: 0.9rem; color: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>¿Qué hora es?</h1>
+    <div class="timer">Temps : <span id="seconds">0</span>s</div>
+    <div class="time-display" id="clock">00:00</div>
+    <input type="text" id="answer" placeholder="Écris l'heure ici..." autocomplete="off">
+    <div class="feedback" id="feedback"></div>
+    <div class="stats">Score : <span id="score">0</span></div>
+</div>
+
+<script>
+    const clockElement = document.getElementById('clock');
+    const inputElement = document.getElementById('answer');
+    const feedbackElement = document.getElementById('feedback');
+    const secondsElement = document.getElementById('seconds');
+    const scoreElement = document.getElementById('score');
+
+    let currentHour, currentMin, correctAnswer;
+    let score = 0;
+    let startTime = Date.now();
+
+    // Démarrer le timer
+    setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        secondsElement.innerText = elapsed;
+    }, 1000);
+
+    const numToWord = {
+        0: "", 1: "una", 2: "dos", 3: "tres", 4: "cuatro", 5: "cinco", 6: "seis", 7: "siete", 8: "ocho", 9: "nueve", 10: "diez",
+        11: "once", 12: "doce", 13: "trece", 14: "catorce", 15: "quince", 16: "dieciséis", 17: "diecisiete", 18: "dieciocho", 
+        19: "diecinueve", 20: "veinte", 21: "veintiuno", 22: "veintidós", 23: "veintitrés", 24: "veinticuatro", 
+        25: "veinticinco", 26: "veintiséis", 27: "veintisiete", 28: "veintiocho", 29: "veintinueve", 30: "media"
+    };
+
+    function generateTime() {
+        currentHour = Math.floor(Math.random() * 12) + 1;
+        currentMin = Math.floor(Math.random() * 31); // 0 à 30
+        
+        let displayH = currentHour < 10 ? '0'+currentHour : currentHour;
+        let displayM = currentMin < 10 ? '0'+currentMin : currentMin;
+        clockElement.innerText = `${displayH}:${displayM}`;
+
+        // Construction de la réponse attendue
+        let prefix = (currentHour === 1) ? "es la" : "son las";
+        let hWord = numToWord[currentHour];
+        
+        if (currentMin === 0) {
+            correctAnswer = `${prefix} ${hWord}`;
+        } else if (currentMin === 15) {
+            correctAnswer = `${prefix} ${hWord} y cuarto`;
+        } else if (currentMin === 30) {
+            correctAnswer = `${prefix} ${hWord} y media`;
+        } else {
+            correctAnswer = `${prefix} ${hWord} y ${numToWord[currentMin]}`;
+        }
+        
+        // Nettoyage des espaces doubles éventuels
+        correctAnswer = correctAnswer.replace(/\s+/g, ' ').trim();
+    }
+
+    function checkAnswer() {
+        const userAns = inputElement.value.toLowerCase().trim();
+        
+        if (userAns === correctAnswer) {
+            feedbackElement.innerHTML = `<span class="success">¡Muy bien!</span>`;
+            score++;
+            scoreElement.innerText = score;
+            inputElement.value = "";
+            generateTime();
+        } else {
+            explainError(userAns, correctAnswer);
+        }
+    }
+
+    function explainError(user, correct) {
+        let reason = "";
+        if (currentHour === 1 && user.startsWith("son las")) {
+            reason = "On utilise 'es la' pour 1h (singulier).";
+        } else if (currentHour !== 1 && user.startsWith("es la")) {
+            reason = "On utilise 'son las' pour les heures pluriel (2h à 12h).";
+        } else if (currentMin === 15 && !user.includes("cuarto")) {
+            reason = "Pour 15 min, on utilise préférentiellement 'cuarto'.";
+        } else if (currentMin === 30 && !user.includes("media")) {
+            reason = "Pour 30 min, on utilise 'media'.";
+        } else {
+            reason = `La bonne réponse était : <b>${correct}</b>`;
+        }
+        feedbackElement.innerHTML = `<span class="error">${reason}</span>`;
+    }
+
+    inputElement.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            checkAnswer();
+        }
+    });
+
+    generateTime();
+</script>
+
+</body>
+</html>

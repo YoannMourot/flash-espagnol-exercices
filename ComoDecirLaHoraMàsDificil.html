@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanish Time - Modo Experto</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #2c3e50; margin: 0; color: #fff; }
+        .card { background: #34495e; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; width: 450px; border: 1px solid #465c71; }
+        h1 { color: #ecf0f1; margin-top: 0; }
+        .time-display { font-size: 4rem; font-weight: bold; margin: 20px 0; color: #f1c40f; text-shadow: 2px 2px 0px #c0392b; }
+        input { width: 100%; padding: 15px; font-size: 1.2rem; border: none; border-radius: 8px; box-sizing: border-box; outline: none; background: #ecf0f1; color: #2c3e50; }
+        .feedback { margin-top: 20px; min-height: 60px; line-height: 1.4; }
+        .error { color: #ff7675; font-weight: bold; }
+        .success { color: #55efc4; font-weight: bold; }
+        .timer { font-size: 1.2rem; color: #bdc3c7; margin-bottom: 10px; }
+        .stats { margin-top: 20px; font-size: 0.9rem; color: #bdc3c7; border-top: 1px solid #5d6d7e; padding-top: 15px; }
+        b { color: #f1c40f; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>¿Qué hora es? <small>(Experto)</small></h1>
+    <div class="timer">Temps : <span id="seconds">0</span>s</div>
+    <div class="time-display" id="clock">00:00</div>
+    <input type="text" id="answer" placeholder="Ex: son las cinco menos cuarto" autocomplete="off">
+    <div class="feedback" id="feedback"></div>
+    <div class="stats">Correctes : <span id="score">0</span></div>
+</div>
+
+<script>
+    const clockElement = document.getElementById('clock');
+    const inputElement = document.getElementById('answer');
+    const feedbackElement = document.getElementById('feedback');
+    const secondsElement = document.getElementById('seconds');
+    const scoreElement = document.getElementById('score');
+
+    let currentHour, currentMin, correctAnswer;
+    let score = 0;
+    let startTime = Date.now();
+
+    setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        secondsElement.innerText = elapsed;
+    }, 1000);
+
+    const numToWord = {
+        1: "una", 2: "dos", 3: "tres", 4: "cuatro", 5: "cinco", 6: "seis", 7: "siete", 8: "ocho", 9: "nueve", 10: "diez",
+        11: "once", 12: "doce", 13: "trece", 14: "catorce", 15: "quince", 16: "dieciséis", 17: "diecisiete", 18: "dieciocho", 
+        19: "diecinueve", 20: "veinte", 21: "veintiuno", 22: "veintidós", 23: "veintitrés", 24: "veinticuatro", 
+        25: "veinticinco", 26: "veintiséis", 27: "veintisiete", 28: "veintiocho", 29: "veintinueve"
+    };
+
+    function generateTime() {
+        currentHour = Math.floor(Math.random() * 12) + 1; // 1 à 12
+        currentMin = Math.floor(Math.random() * 60); // 0 à 59
+        
+        let displayH = currentHour < 10 ? '0'+currentHour : currentHour;
+        let displayM = currentMin < 10 ? '0'+currentMin : currentMin;
+        clockElement.innerText = `${displayH}:${displayM}`;
+
+        if (currentMin === 0) {
+            let prefix = (currentHour === 1) ? "es la" : "son las";
+            correctAnswer = `${prefix} ${numToWord[currentHour]} en punto`;
+        } 
+        else if (currentMin <= 30) {
+            let prefix = (currentHour === 1) ? "es la" : "son las";
+            let minPart = "";
+            if (currentMin === 15) minPart = "y cuarto";
+            else if (currentMin === 30) minPart = "y media";
+            else minPart = "y " + numToWord[currentMin];
+            correctAnswer = `${prefix} ${numToWord[currentHour]} ${minPart}`;
+        } 
+        else {
+            // Logique "MENOS"
+            let nextHour = (currentHour % 12) + 1;
+            let minsRemaining = 60 - currentMin;
+            let prefix = (nextHour === 1) ? "es la" : "son las";
+            let minPart = (minsRemaining === 15) ? "menos cuarto" : "menos " + numToWord[minsRemaining];
+            correctAnswer = `${prefix} ${numToWord[nextHour]} ${minPart}`;
+        }
+        correctAnswer = correctAnswer.replace(/\s+/g, ' ').trim();
+    }
+
+    function checkAnswer() {
+        const userAns = inputElement.value.toLowerCase().trim();
+        if (userAns === correctAnswer) {
+            feedbackElement.innerHTML = `<span class="success">¡Excelente!</span>`;
+            score++;
+            scoreElement.innerText = score;
+            inputElement.value = "";
+            generateTime();
+        } else {
+            explainError(userAns);
+        }
+    }
+
+    function explainError(user) {
+        let explanation = `La bonne réponse est : <br><b>${correctAnswer}</b><br>`;
+        if (currentMin > 30) {
+            explanation += `<small>Rappel : après 30 min, on utilise l'heure suivante + "menos".</small>`;
+        }
+        feedbackElement.innerHTML = `<span class="error">${explanation}</span>`;
+    }
+
+    inputElement.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkAnswer();
+    });
+
+    generateTime();
+</script>
+</body>
+</html>

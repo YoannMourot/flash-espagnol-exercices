@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spanish Location Challenge</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #1a237e; margin: 0; color: #fff; }
+        .card { background: #ffffff; padding: 2rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; width: 650px; color: #333; }
+        .prompt { font-size: 1.4rem; background: #f5f5f5; padding: 20px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; border-left: 5px solid #ff5722; }
+        input { width: 100%; padding: 15px; font-size: 1.1rem; border: 2px solid #ddd; border-radius: 8px; outline: none; margin-bottom: 10px; text-align: center; }
+        input:focus { border-color: #ff5722; }
+        .feedback { min-height: 60px; font-size: 1rem; margin-top: 10px; padding: 10px; border-radius: 8px; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .stats { margin-top: 20px; font-size: 0.9rem; color: #666; }
+        h1 { color: #1a237e; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Spanish Learning Challenge</h1>
+    <p style="color: #666;">Translate the English sentence into <b>Spanish</b>.</p>
+    
+    <div class="prompt" id="prompt">Loading...</div>
+    <input type="text" id="answer" placeholder="Escribe en español..." autocomplete="off">
+    
+    <div class="feedback" id="feedback"></div>
+    
+    <div class="stats">
+        Sentence <span id="current">1</span> / 50 | Score: <span id="score">0</span>
+    </div>
+</div>
+
+<script>
+    const data = [
+        { en: "The cat is next to the dog", es: "El gato está al lado del perro" },
+        { en: "The book is to the right of the sofa", es: "El libro está a la derecha del sofá" },
+        { en: "The pen is to the left of the notebook", es: "El bolígrafo está a la izquierda del cuaderno" },
+        { en: "The bag is behind the armchair", es: "El bolso está detrás del sillón" },
+        { en: "The mirror is above the sink", es: "El espejo está encima del lavabo" },
+        { en: "The bike is in front of the garage", es: "La bicicleta está delante del garaje" },
+        { en: "The rug is under the bed", es: "La alfombra está debajo de la cama" },
+        { en: "The bird is far from the nest", es: "El pájaro está lejos del nido" },
+        { en: "The child is near the garden", es: "El niño está cerca del jardín" },
+        { en: "The TV is opposite the bed", es: "La tele está enfrente de la cama" },
+        { en: "The apple is on the table", es: "La manzana está sobre la mesa" },
+        { en: "The keys are in the drawer", es: "Las llaves están en el cajón" },
+        { en: "The glass is between the bottle and the plate", es: "El vaso está entre la botella y el plato" },
+        { en: "The spoon is in the cup", es: "La cuchara está en la taza" },
+        { en: "The dog is under the tree", es: "El perro está debajo del árbol" },
+        { en: "The lamp is next to the window", es: "La lámpara está al lado de la ventana" },
+        { en: "The shoes are behind the door", es: "Los zapatos están detrás de la puerta" },
+        { en: "The milk is in the fridge", es: "La leche está en la nevera" },
+        { en: "The painting is on the wall", es: "El cuadro está en la pared" },
+        { en: "The bread is on the counter", es: "El pan está sobre el mostrador" },
+        { en: "The plates are on the shelf", es: "Los platos están en la estantería" },
+        { en: "The chairs are around the table", es: "Las sillas están alrededor de la mesa" },
+        { en: "The clothes are in the wardrobe", es: "La ropa está en el armario" },
+        { en: "The flowers are in front of the window", es: "Las flores están delante de la ventana" },
+        { en: "The books are under the desk", es: "Los libros están debajo del escritorio" },
+        { en: "The photos are in the album", es: "Las fotos están en el álbum" },
+        { en: "The files are on the computer", es: "Los archivos están en el ordenador" },
+        { en: "The cushions are on the sofa", es: "Los cojines están en el sofá" },
+        { en: "The spoons are next to the forks", es: "Las cucharas están al lado de los tenedores" },
+        { en: "The cars are in front of the building", es: "Los coches están delante del edificio" },
+        { en: "The dictionary is between the books", es: "El diccionario está entre los libros" },
+        { en: "The remote is under the newspaper", es: "El mando está debajo del periódico" },
+        { en: "The coffee is next to the cake", es: "El café está al lado del pastel" },
+        { en: "The salt is to the left of the pepper", es: "La sal está a la izquierda de la pimienta" },
+        { en: "The soap is near the tap", es: "El jabón está cerca del grifo" },
+        { en: "The towel is on the radiator", es: "La toalla está en el radiador" },
+        { en: "The umbrella is behind the entrance", es: "El paraguas está detrás de la entrada" },
+        { en: "The broom is in the corner", es: "La escoba está en el rincón" },
+        { en: "The bin is under the sink", es: "El cubo de basura está debajo del fregadero" },
+        { en: "The watch is on the nightstand", es: "El reloj está en la mesita de noche" },
+        { en: "The hat is in the closet", es: "El gorro está en el armario" },
+        { en: "The backpack is next to the bed", es: "La mochila está al lado de la cama" },
+        { en: "The scissors are in the pencil case", es: "Las tijeras están en el estuche" },
+        { en: "The cat is on the roof", es: "El gato está en el tejado" },
+        { en: "The toy is between the boxes", es: "El juguete está entre las cajas" },
+        { en: "The mirror is to the right of the wardrobe", es: "El espejo está a la derecha del armario" },
+        { en: "The computer is on the desk", es: "El ordenador está en el escritorio" },
+        { en: "The key is to the left of the phone", es: "La llave está a la izquierda del teléfono" },
+        { en: "The pen is in front of the paper", es: "El bolígrafo está delante de la hoja" },
+        { en: "The glass is empty on the table", es: "El vaso está vacío sobre la mesa" }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    const promptEl = document.getElementById('prompt');
+    const inputEl = document.getElementById('answer');
+    const feedbackEl = document.getElementById('feedback');
+    const currentEl = document.getElementById('current');
+    const scoreEl = document.getElementById('score');
+
+    function loadCard() {
+        if (current >= data.length) {
+            promptEl.innerText = "Congratulations! You mastered the 50 sentences.";
+            inputEl.style.display = "none";
+            return;
+        }
+        promptEl.innerText = data[current].en;
+        inputEl.value = "";
+        feedbackEl.className = "feedback";
+        feedbackEl.innerHTML = "";
+        currentEl.innerText = current + 1;
+    }
+
+    function check() {
+        const user = inputEl.value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+        const correct = data[current].es.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+        
+        if (user === correct) {
+            feedbackEl.className = "feedback success";
+            feedbackEl.innerHTML = "¡Excelente! Correct.";
+            score++;
+            scoreEl.innerText = score;
+            setTimeout(next, 1000);
+        } else {
+            feedbackEl.className = "feedback error";
+            feedbackEl.innerHTML = `Not quite. Correct Spanish: <br><b>${data[current].es}</b>`;
+        }
+    }
+
+    function next() {
+        current++;
+        loadCard();
+    }
+
+    inputEl.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') check();
+    });
+
+    loadCard();
+</script>
+
+</body>
+</html>
